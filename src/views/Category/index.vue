@@ -1,35 +1,12 @@
 <script setup>
-  import {getCategoryAPI} from '@/apis/category'
-  import { onMounted, ref } from 'vue'
-  import { useRoute } from 'vue-router'
-
-  import { getBannerAPI } from '@/apis/home'
-
-  import { onBeforeRouteUpdate } from 'vue-router'
-
   import GoodsItem from '@/views/Home/components/GoodsItem.vue'
-  const categoryData = ref({})
-  const route = useRoute()
-  const getCategory = async (id = route.params.id) => {
-    const res = await getCategoryAPI(id)
-    categoryData.value = res.result
-  }
-  onMounted(() => getCategory())
+  import { useBanner } from './composables/useBanner'
+  import { useCategory } from './composables/useCategory'
 
-  // 目标：路有参数变化时，可以将分类数据接口重新发送
-  onBeforeRouteUpdate((to) => {
-    // 存在问题：使用最新的路由参数请求最新的分类数据
-    getCategory(to.params.id)
-  })
+  // 获取分类数据
+  const { categoryData } = useCategory()
   //获取banner
-  
-  const bannerList = ref([])
-  const getBanner = async () => {
-    const res = await getBannerAPI()
-    bannerList.value = res.result
-  }
-
-  onMounted(() => getBanner())
+  const { bannerList } = useBanner()
 </script>
 
 <template>

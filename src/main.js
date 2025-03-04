@@ -19,8 +19,8 @@ import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 const pinia = createPinia()
 const app = createApp(App)
 
+app.use(pinia)
 pinia.use(piniaPluginPersistedstate)
-app.use(createPinia())
 app.use(router)
 app.use(lazyPlugin)
 app.mount('#app')

@@ -4,6 +4,11 @@ import {loginAPI} from '@/apis/user'
 import { ElMessage } from 'element-plus'
 import 'element-plus/theme-chalk/el-message.css'
 import {useRouter} from 'vue-router'
+import { useUserStore } from '@/stores/user'
+
+
+const userStore = useUserStore()
+
 // 表单数据对象
 const form = ref({
   account: '',
@@ -23,7 +28,6 @@ const rules = {
   agree: [
     {
       validator: (rule, val, callback) => {
-        console.log(val)
         // 自定义校验逻辑
         return val ? callback() : new Error('请先同意协议')
       }
@@ -43,8 +47,7 @@ const doLogin = () => {
     // 以valid做为判断条件 如果通过校验才执行登录逻辑
      if (valid) {
       // TODO LOGIN
-      const res = await loginAPI({ account, password })
-      console.log(res)
+      await userStore.getUserInfo({ account, password })
       // 1. 提示用户
       ElMessage({ type: 'success', message: '登录成功' })
       // 2. 跳转首页

@@ -59,6 +59,11 @@ defineStore('cart', () => {
   }
 
 
+  // 清除购物车
+  const clearCart = () => {
+    cartList.value = []
+  }
+
   // 计算属性
   // 1. 总的数量 所有项的count之和
   const allCount = computed(() => cartList.value.reduce((a, c) => a + c.count, 0))
@@ -96,7 +101,8 @@ defineStore('cart', () => {
     allCheck,
     isAll,
     selectedCount,
-    selectedPrice
+    selectedPrice,
+    clearCart
   }
 }, {
   persist: true,

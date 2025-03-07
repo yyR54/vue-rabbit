@@ -102,7 +102,8 @@ defineStore('cart', () => {
     isAll,
     selectedCount,
     selectedPrice,
-    clearCart
+    clearCart,
+    updateNewList
   }
 }, {
   persist: true,

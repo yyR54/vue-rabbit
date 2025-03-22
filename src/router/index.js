@@ -1,20 +1,26 @@
 // createRouter: 创建router实例对象
-// createWebJistory: 创建history模式的路由
-import { createRouter, createWebHistory } from 'vue-router'
-import Login from '@/views/Login/index.vue'
-import Layout from '@/views/Layout/index.vue'
-import Home from '@/views/Home/index.vue'
-import Category from '@/views/Category/index.vue'
-import SubCategory from '@/views/SubCategory/index.vue'
-import Detail from '@/views/Detail/index.vue'
-import CartList from '@/views/CartList/index.vue'
-import Checkout from '@/views/Checkout/index.vue'
-import Pay from '@/views/Pay/index.vue'
-import PayBack from '@/views/Pay/PayBack.vue'
-import Member from '@/views/Member/index.vue'
-import UserInfo from '@/views/Member/components/UserInfo.vue'
-import UserOrder from '@/views/Member/components/UserOrder.vue'
+// createWebHistory: 创建history模式的路由
+import { createRouter, createWebHistory } from 'vue-router';
 
+// 模拟用户登录状态
+let isLoggedIn = false;
+
+// 设置用户登录状态
+export const setLoggedIn = (status) => {
+  isLoggedIn = status;
+};
+
+// 获取用户登录状态
+export const getLoggedIn = () => {
+  return isLoggedIn;
+};
+
+// 路由守卫逻辑提取到单独的函数中
+const checkPaymentAccess = (to) => {
+  const paymentPages = ['checkout', 'pay', 'paycallback'];
+  const isPaymentPage = paymentPages.some(page => to.path.includes(page));
+  return isPaymentPage && !getLoggedIn();
+};
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -23,53 +29,41 @@ const router = createRouter({
     {
       path: '/',
       name: 'layout',
-      component: Layout,
+      component: () => import('@/views/Layout/index.vue'),
       children: [
         {
           path: '',
           name: 'home',
-          component: Home
+          component: () => import('@/views/Home/index.vue')
         },
         {
           path: 'category/:id',
           name: 'category',
-          component: Category
+          component: () => import('@/views/Category/index.vue')
         },
         {
           path: 'category/sub/:id',
-          component: SubCategory
+          component: () => import('@/views/SubCategory/index.vue')
         },
         {
           path: 'detail/:id',
-          component: Detail
+          component: () => import('@/views/Detail/index.vue')
         },
         {
           path: 'cartlist',
-          component: CartList
-        },
-        {
-          path: 'checkout',
-          component: Checkout
-        },
-        {
-          path: 'pay',
-          component: Pay
-        },
-        {
-          path: 'paycallback', // 注意路径，必须是paycallback
-          component: PayBack
+          component: () => import('@/views/CartList/index.vue')
         },
         {
           path: '/member',
-          component: Member,
+          component: () => import('@/views/Member/index.vue'),
           children: [
             {
               path: '',
-              component: UserInfo
+              component: () => import('@/views/Member/components/UserInfo.vue')
             },
             {
               path: 'order',
-              component: UserOrder
+              component: () => import('@/views/Member/components/UserOrder.vue')
             }
           ]
         }
@@ -78,13 +72,42 @@ const router = createRouter({
     {
       path: '/login',
       name: 'login',
-      component: Login
-    },
+      component: () => import('@/views/Login/index.vue')
+    }
   ],
   // 路由行为定制
   scrollBehavior () {
     return { top: 0 }
   }
-})
+});
 
-export default router
+// 动态添加路由
+const paymentRoutes = [
+  {
+    path: 'checkout',
+    component: () => import('@/views/Checkout/index.vue')
+  },
+  {
+    path: 'pay',
+    component: () => import('@/views/Pay/index.vue')
+  },
+  {
+    path: 'paycallback', // 注意路径，必须是paycallback
+    component: () => import('@/views/Pay/PayBack.vue')
+  }
+];
+
+paymentRoutes.forEach(route => {
+  router.addRoute('layout', route);
+});
+
+// 路由守卫
+router.beforeEach((to, from, next) => {
+  if (checkPaymentAccess(to)) {
+    next('/login');
+  } else {
+    next();
+  }
+});
+
+export default router;

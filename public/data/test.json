@@ -1,0 +1,26 @@
+[
+  {
+    "name": "张三",
+    "id": "001",
+    "email": "zhangsan@example.com",
+    "is_active": true,
+    "roles": ["管理员", "用户"],
+    "created_at": "2025-03-19T18:04:00Z"
+  },
+  {
+    "name": "李四",
+    "id": "002",
+    "email": "lisi@example.com",
+    "is_active": false,
+    "roles": ["用户"],
+    "created_at": "2025-03-18T10:22:00Z"
+  },
+  {
+    "name": "王五",
+    "id": "003",
+    "email": "wangwu@example.com",
+    "is_active": true,
+    "roles": ["编辑", "用户"],
+    "created_at": "2025-03-17T09:15:00Z"
+  }
+]

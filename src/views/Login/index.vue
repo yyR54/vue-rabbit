@@ -5,6 +5,8 @@ import { ElMessage } from 'element-plus'
 import 'element-plus/theme-chalk/el-message.css'
 import {useRouter} from 'vue-router'
 import { useUserStore } from '@/stores/userStore'
+import { setLoggedIn } from '@/router';
+
 
 
 const userStore = useUserStore()
@@ -50,6 +52,7 @@ const doLogin = () => {
       await userStore.getUserInfo({ account, password })
       // 1. 提示用户
       ElMessage({ type: 'success', message: '登录成功' })
+      setLoggedIn(true);
       // 2. 跳转首页
       router.replace({ path: '/' })
     }

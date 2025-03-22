@@ -1,5 +1,13 @@
 <script setup>
+// import { getTestAPI } from '@/apis/test';
 
+// getTestAPI()
+//   .then(res => {
+//     console.log(res.data); 
+//   })
+//   .catch(error => {
+//     console.error('Failed to fetch data:', error);
+//   });
 </script>
 
 <template>

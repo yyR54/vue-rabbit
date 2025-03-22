@@ -72,8 +72,10 @@ const load = async () => {
       </el-tabs>
 
       <div class="body" v-infinite-scroll="load">
-         <!-- 商品列表-->
-         <GoodsItem v-for="goods in goodList" :goods="goods" :key="goods.id"/>
+         <!-- 使用 keep-alive 缓存 GoodsItem 组件 -->
+        <keep-alive>
+          <GoodsItem v-for="goods in goodList" :goods="goods" :key="goods.id"/>
+        </keep-alive>
       </div>
     </div>
   </div>

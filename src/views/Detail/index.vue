@@ -1,17 +1,39 @@
 <script setup>
-import DetailHot from './components/DetailHot.vue'
 import { getDetail } from '@/apis/detail'
+import { getHotGoodsAPI } from '@/apis/detail' // 引入获取热销商品的 API
 import { onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useCartStore } from '@/stores/cartStore'
+import { defineAsyncComponent } from 'vue'
+import Skeleton from './components/Skeleton.vue' // 引入骨架屏组件
+
+const DetailHot = defineAsyncComponent(() => import('./components/DetailHot.vue'))
 const cartStore = useCartStore()
 const goods = ref({})
 const route = useRoute()
+const goodList24 = ref([]) // 24小时热榜数据
+const goodListWeek = ref([]) // 周热榜数据
+const isLoading = ref(true) // 数据加载状态
+
 const getGoods = async () => {
-  const res = await getDetail(route.params.id)
-  goods.value = res.result
+  const id = route.params.id
+  try {
+    const [detailRes, hotRes24, hotResWeek] = await Promise.all([
+      getDetail(id),
+      getHotGoodsAPI({ id, type: 1 }),
+      getHotGoodsAPI({ id, type: 2 })
+    ])
+    goods.value = detailRes.result
+    goodList24.value = hotRes24.result
+    goodListWeek.value = hotResWeek.result
+  } catch (error) {
+    console.error('数据加载失败', error)
+  } finally {
+    isLoading.value = false // 数据加载完成，隐藏骨架屏
+  }
 }
+
 onMounted(() => getGoods())
 
 // sku规格被操作时
@@ -47,26 +69,22 @@ const addCart = () => {
     ElMessage.warning('请选择规格')
   }
 }
-
 </script>
 
 <template>
   <div class="xtx-goods-page">
-    <div class="container" v-if="goods.details">
+    <!-- 骨架屏 -->
+    <Skeleton v-if="isLoading" />
+    <!-- 实际内容 -->
+    <div class="container" v-else-if="goods.details">
+      <!-- 面包屑导航 -->
       <div class="bread-container">
         <el-breadcrumb separator=">">
           <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
-          <!-- 
-                错误原因：goods一开始{}  {}.categories -> undefined  -> undefined[1]
-                1. 可选链的语法?. 
-                2. v-if手动控制渲染时机 保证只有数据存在才渲染
-            -->
-          <el-breadcrumb-item :to="{ path: `/category/${goods.categories[1].id}` }">{{ goods.categories[1].name }}
-          </el-breadcrumb-item>
+          <el-breadcrumb-item :to="{ path: `/category/${goods.categories[1].id}` }">{{ goods.categories[1].name }}</el-breadcrumb-item>
           <el-breadcrumb-item :to="{ path: `/category/sub/${goods.categories[0].id}` }">{{
             goods.categories[0].name
-          }}
-          </el-breadcrumb-item>
+          }}</el-breadcrumb-item>
           <el-breadcrumb-item>抓绒保暖，毛毛虫子儿童运动鞋</el-breadcrumb-item>
         </el-breadcrumb>
       </div>
@@ -76,6 +94,7 @@ const addCart = () => {
           <div class="goods-info">
             <div class="media">
               <!-- 图片预览区 -->
+              <!-- 使用 v-img-lazy 指令 -->
               <XtxImageView :image-list="goods.mainPictures" />
               <!-- 统计数量 -->
               <ul class="goods-sales">
@@ -152,17 +171,31 @@ const addCart = () => {
                       <span class="dd">{{ item.value }}</span>
                     </li>
                   </ul>
-                  <!-- 图片 -->
-                  <img v-for="img in goods.details.pictures" :src="img" :key="img" alt="">
+                  <!-- 图片，使用 v-img-lazy 指令 -->
+                  <img v-for="img in goods.details.pictures" :key="img" v-img-lazy="img" alt="">
                 </div>
               </div>
             </div>
             <!-- 24热榜+专题推荐 -->
             <div class="goods-aside">
               <!-- 24小时 -->
-              <DetailHot :hot-type="1" />
+              <Suspense>
+                <template #default>
+                  <DetailHot :type="1" :goodList="goodList24" />
+                </template>
+                <template #fallback>
+                  <div>Loading...</div>
+                </template>
+              </Suspense>
               <!-- 周 -->
-              <DetailHot :hot-type="2" />
+              <Suspense>
+                <template #default>
+                  <DetailHot :type="2" :goodList="goodListWeek" />
+                </template>
+                <template #fallback>
+                  <div>Loading...</div>
+                </template>
+              </Suspense>
             </div>
           </div>
         </div>
@@ -170,6 +203,12 @@ const addCart = () => {
     </div>
   </div>
 </template>
+
+
+<style scoped lang='scss'>
+/* 原有的样式代码保持不变 */
+</style>
+
 
 
 <style scoped lang='scss'>

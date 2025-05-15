@@ -1,7 +1,7 @@
 <script setup>
 import { getDetail } from '@/apis/detail'
 import { getHotGoodsAPI } from '@/apis/detail' // 引入获取热销商品的 API
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useCartStore } from '@/stores/cartStore'
@@ -19,14 +19,26 @@ const isLoading = ref(true) // 数据加载状态
 const getGoods = async () => {
   const id = route.params.id
   try {
-    const [detailRes, hotRes24, hotResWeek] = await Promise.all([
-      getDetail(id),
+    // ✅ 1. 优先加载主商品详情
+    const detailRes = await getDetail(id)
+    goods.value = detailRes.result
+
+    // ✅ 2. 等 DOM 渲染后再加载非关键数据
+    await nextTick()
+
+    // ✅ 3. 后台并发加载热销商品（不影响首屏渲染）
+    Promise.allSettled([
       getHotGoodsAPI({ id, type: 1 }),
       getHotGoodsAPI({ id, type: 2 })
-    ])
-    goods.value = detailRes.result
-    goodList24.value = hotRes24.result
-    goodListWeek.value = hotResWeek.result
+    ]).then(([hotRes24, hotResWeek]) => {
+      if (hotRes24.status === 'fulfilled') {
+        goodList24.value = hotRes24.value.result
+      }
+      if (hotResWeek.status === 'fulfilled') {
+        goodListWeek.value = hotResWeek.value.result
+      }
+    })
+
   } catch (error) {
     console.error('数据加载失败', error)
   } finally {
@@ -35,6 +47,7 @@ const getGoods = async () => {
 }
 
 onMounted(() => getGoods())
+
 
 // sku规格被操作时
 let skuObj = {}
